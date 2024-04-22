@@ -1,0 +1,50 @@
+from flask import Flask, render_template, request, redirect, url_for
+from passlib.hash import sha256_crypt
+
+app = Flask(__name__)
+
+# Simulare bază de date
+users = {}
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        if username in users and sha256_crypt.verify(password, users[username]):
+            # Autentificare reușită
+            return redirect(url_for('home'))
+        else:
+            # Autentificare eșuată
+            return "Autentificare eșuată. Verifică username-ul și parola."
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        # Verificăm dacă utilizatorul există deja
+        if username in users:
+            return "Acest username există deja. Te rog alege altul."
+
+        # Salvăm parola ca hash
+        hashed_password = sha256_crypt.hash(password)
+        users[username] = hashed_password
+
+        return redirect(url_for('login'))
+    return render_template('signup.html')
+
+# Endpoint suplimentar creat de mine
+@app.route('/about')
+def about():
+    return "Acesta este un endpoint suplimentar creat de mine."
+
+if __name__ == '__main__':
+    app.run(debug=True)
